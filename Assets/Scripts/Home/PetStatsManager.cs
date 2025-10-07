@@ -14,6 +14,10 @@ public class PetStatsManager : MonoBehaviour
     public int maxStrength = 100;
     public int maxIntelligence = 100;
 
+    [Header("Level & XP")]
+    public int level = 1;
+    public TMP_Text levelLabel;
+
     [Header("UI References")]
     public Image healthFill;
     public TMP_Text healthLabel;
@@ -24,14 +28,36 @@ public class PetStatsManager : MonoBehaviour
     public Image intelligenceFill;
     public TMP_Text intelligenceLabel;
 
+    // Singleton
+    private static PetStatsManager instance;
+    public static PetStatsManager Instance => instance;
+
+    void Awake()
+    {
+        // Asegurarse de que solo haya una instancia y persista entre escenas
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     void Start()
     {
-        UpdateUI();
+        health = 0;
+        strength = 0;
+        intelligence = 0;
+        UpdateUI(); // esto fuerza a que las barras empiecen vacías
     }
+
 
     public void AddStat(string stat, int amount)
     {
-        switch(stat)
+        switch (stat)
         {
             case "Health":
                 health = Mathf.Clamp(health + amount, 0, maxHealth);
@@ -42,23 +68,48 @@ public class PetStatsManager : MonoBehaviour
             case "Intelligence":
                 intelligence = Mathf.Clamp(intelligence + amount, 0, maxIntelligence);
                 break;
+            default:
+                Debug.LogWarning($"Tipo de stat no reconocido: {stat}");
+                break;
         }
 
+        UpdateLevel();
         UpdateUI();
     }
 
-    void UpdateUI()
+    private void UpdateLevel()
+    {
+        int totalXP = health + strength + intelligence;
+        level = 1 + (totalXP / 100); // sube un nivel cada 100 puntos combinados
+    }
+
+    private void UpdateUI()
     {
         // Salud
-        healthFill.fillAmount = (float)health / maxHealth;
-        healthLabel.text = $"Salud: {health}/{maxHealth}";
+        if (healthFill != null)
+        {
+            healthFill.fillAmount = (float)health / maxHealth;
+            healthLabel.text = $"Salud: {health}/{maxHealth}";
+        }
 
         // Fuerza
-        strengthFill.fillAmount = (float)strength / maxStrength;
-        strengthLabel.text = $"Fuerza: {strength}/{maxStrength}";
+        if (strengthFill != null)
+        {
+            strengthFill.fillAmount = (float)strength / maxStrength;
+            strengthLabel.text = $"Fuerza: {strength}/{maxStrength}";
+        }
 
         // Inteligencia
-        intelligenceFill.fillAmount = (float)intelligence / maxIntelligence;
-        intelligenceLabel.text = $"Inteligencia: {intelligence}/{maxIntelligence}";
+        if (intelligenceFill != null)
+        {
+            intelligenceFill.fillAmount = (float)intelligence / maxIntelligence;
+            intelligenceLabel.text = $"Inteligencia: {intelligence}/{maxIntelligence}";
+        }
+
+        // Nivel
+        if (levelLabel != null)
+        {
+            levelLabel.text = $"Nivel {level}";
+        }
     }
 }

@@ -45,9 +45,7 @@ public class HabitManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Función llamada al pulsar "Añadir" en la UI
-    /// </summary>
+    // Función llamada al pulsar "Añadir" en la UI
     public void OnAddHabitButtonClicked()
     {
         string name = habitNameInput.text;
@@ -72,17 +70,13 @@ public class HabitManager : MonoBehaviour
         ClearHabitInputs();
     }
 
-    /// <summary>
-    /// Función llamada al pulsar "Cancelar" en la UI
-    /// </summary>
+    // Función llamada al pulsar "Cancelar" en la UI
     public void OnCancelAddHabit()
     {
         ClearHabitInputs();
     }
 
-    /// <summary>
-    /// Limpia los campos de entrada de la UI
-    /// </summary>
+    // Limpia los campos de entrada de la UI
     private void ClearHabitInputs()
     {
         habitNameInput.text = "";
@@ -90,9 +84,7 @@ public class HabitManager : MonoBehaviour
         habitStatDropdown.value = 0;
     }
 
-    /// <summary>
-    /// Agrega un nuevo hábito a la lista y crea su UI
-    /// </summary>
+    // Agrega un nuevo hábito a la lista y crea su UI
     public void AddHabit(string name, string type, int xpReward)
     {
         Habit newHabit = new Habit(name, type, xpReward);
@@ -105,9 +97,7 @@ public class HabitManager : MonoBehaviour
         ScrollToBottom();
     }
 
-    /// <summary>
-    /// Instancia el prefab del hábito y lo configura con HabitItemUI
-    /// </summary>
+    // Instancia el prefab del hábito y lo configura con HabitItemUI
     private void CreateHabitUI(Habit habit)
     {
         if (habitItemPrefab == null || habitsListContent == null)
@@ -130,22 +120,35 @@ public class HabitManager : MonoBehaviour
 
         // Reset del RectTransform para que el Vertical Layout Group lo gestione correctamente
         RectTransform rt = item.GetComponent<RectTransform>();
-        if (rt != null)
-        {
+        //if (rt != null)
+        //{
             rt.localScale = Vector3.one;
             rt.anchoredPosition = Vector2.zero;
-        }
+            rt.sizeDelta = new Vector2(rt.sizeDelta.x, 100f); // Altura fija
+        //}
+
+        // --- CLAVE: forzar que el layout del ScrollView se recalcule ---
+        LayoutRebuilder.ForceRebuildLayoutImmediate(habitsListContent.GetComponent<RectTransform>());
+        
     }
 
-    /// <summary>
-    /// Mueve el ScrollRect al final para que se vea el último hábito
-    /// </summary>
+    // Mueve el ScrollRect al final para que se vea el último hábito
     private void ScrollToBottom()
     {
-        if (scrollRect != null)
-        {
-            Canvas.ForceUpdateCanvases(); // asegura que el layout esté actualizado
-            scrollRect.verticalNormalizedPosition = 0f; // 0 = abajo, 1 = arriba
-        }
+        StartCoroutine(ScrollToBottomNextFrame());
     }
+
+    private IEnumerator ScrollToBottomNextFrame()
+    {
+        // Espera un frame para que Unity actualice layout y altura del content
+        yield return null;
+
+        // Forzar actualización del layout
+        LayoutRebuilder.ForceRebuildLayoutImmediate(habitsListContent.GetComponent<RectTransform>());
+
+        // Mover ScrollRect al final
+        if (scrollRect != null)
+            scrollRect.verticalNormalizedPosition = 0f; // 0 = abajo
+    }
+
 }
